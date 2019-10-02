@@ -12,6 +12,7 @@ import (
 
 type ViaList struct {
 	vianame    string
+	oldaddress string
 	ipaddress  string
 	subnetmask string
 	gateway    string
@@ -34,11 +35,11 @@ func ReadCsv(filename string) ([][]string, error) {
 	return lines, nil
 }
 
-func SetNetwork(vianame string, ipaddress string, subnetmask string, gateway string, dns string) (string, error) {
+func SetNetwork(vianame string, oldaddress string, ipaddress string, subnetmask string, gateway string, dns string) (string, error) {
 	defer color.Unset()
 	color.Set(color.FgYellow)
 
-	address := vianame
+	address := oldaddress
 
 	var command via.Command
 	command.Command = "IpSetting"
@@ -48,10 +49,10 @@ func SetNetwork(vianame string, ipaddress string, subnetmask string, gateway str
 	command.Param4 = dns
 	command.Param5 = vianame
 
-	fmt.Printf("Setting IP Info for %s", vianame)
+	fmt.Printf("Setting IP Info for %s\n", vianame)
 	resp, err := via.SendCommand(command, address)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("Error in setting IP on %s", address))
+		return "", errors.New(fmt.Sprintf("Error in setting IP on %s\n", vianame))
 	}
 	return resp, nil
 }
@@ -66,16 +67,18 @@ func main() {
 	for _, line := range lines {
 		data := ViaList{
 			vianame:    line[0],
-			ipaddress:  line[1],
-			subnetmask: line[2],
-			gateway:    line[3],
-			dns:        line[4],
+			oldaddress: line[1],
+			ipaddress:  line[2],
+			subnetmask: line[3],
+			gateway:    line[4],
+			dns:        line[5],
 		}
-		fmt.Printf("Changing over %v", data.vianame)
-		ret, err := SetNetwork(data.vianame, data.ipaddress, data.subnetmask, data.gateway, data.dns)
+		fmt.Printf("Changing over %v\n", data.vianame)
+		ret, err := SetNetwork(data.vianame, data.oldaddress, data.ipaddress, data.subnetmask, data.gateway, data.dns)
 		if err != nil {
-			fmt.Printf("%v returned an error: %v", data.vianame, err)
+			fmt.Printf("%v returned an error: %v\n", data.vianame, err)
+		} else {
+			fmt.Printf("Change over completed successfully with %v\n", ret)
 		}
-		fmt.Printf("Chang over completed successfully with %v", ret)
 	}
 }
