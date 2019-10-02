@@ -34,13 +34,13 @@ func ReadCsv(filename string) ([][]string, error) {
 	return lines, nil
 }
 
-func SetNetwork(vianame string, ipaddress string, subnetmask string, gateway string, dns string) string {
+func SetNetwork(vianame string, ipaddress string, subnetmask string, gateway string, dns string) (string, error) {
 	defer color.Unset()
 	color.Set(color.FgYellow)
 
 	address := vianame
 
-	var command Command
+	var command via.Command
 	command.Command = "IpSetting"
 	command.Param1 = ipaddress
 	command.Param2 = subnetmask
@@ -48,8 +48,8 @@ func SetNetwork(vianame string, ipaddress string, subnetmask string, gateway str
 	command.Param4 = dns
 	command.Param5 = vianame
 
-	fmt.Println("Setting IP Info for %v", vianame)
-	resp, err := SendCommand(command, address)
+	fmt.Printf("Setting IP Info for %s", vianame)
+	resp, err := via.SendCommand(command, address)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Error in setting IP on %s", address))
 	}
@@ -71,7 +71,11 @@ func main() {
 			gateway:    line[3],
 			dns:        line[4],
 		}
-		fmt.Println("Changing over %v", data.vianame)
-
+		fmt.Printf("Changing over %v", data.vianame)
+		ret, err := SetNetwork(data.vianame, data.ipaddress, data.subnetmask, data.gateway, data.dns)
+		if err != nil {
+			fmt.Printf("%v returned an error: %v", data.vianame, err)
+		}
+		fmt.Printf("Chang over completed successfully with %v", ret)
 	}
 }
