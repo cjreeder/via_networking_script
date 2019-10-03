@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/byuoitav/common/log"
 
@@ -33,6 +34,29 @@ type Command struct {
 }
 
 // SendCommand opens a connection with <addr> and sends the <command> to the via, returning the response from the via, or an error if one occured.
+func SendonlyCommand(command Command, addr string) error {
+	defer color.Unset()
+	color.Set(color.FgCyan)
+
+	// get the connection
+	log.L.Infof("Opening telnet connection with %s", addr)
+	conn, err := getConnection(addr)
+	if err != nil {
+		return err
+	}
+
+	// login
+	login(conn)
+
+	// write command
+	if len(command.Command) > 0 {
+		command.addAuth(false)
+		command.writeCommand(conn)
+	}
+	time.Sleep(10 * time.Second)
+	return nil
+}
+
 func SendCommand(command Command, addr string) (string, error) {
 	defer color.Unset()
 	color.Set(color.FgCyan)
@@ -68,7 +92,6 @@ func SendCommand(command Command, addr string) (string, error) {
 
 	return string(resp), nil
 }
-
 func login(conn *net.TCPConn) error {
 	defer color.Unset()
 
